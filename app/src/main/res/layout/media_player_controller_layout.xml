@@ -122,10 +122,18 @@
         <LinearLayout
             android:id="@+id/control_bottom"
             android:layout_width="match_parent"
-            android:layout_height="8dp"
+            android:layout_height="10dp"
             android:layout_alignParentBottom="true"
             android:orientation="vertical">
-
+            <TextView
+                android:id="@+id/isloading_notice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="资源加载中..."
+                android:textSize="6sp"
+                android:textColor="@color/colorAccent"
+                android:visibility="visible"/>
         </LinearLayout>
     </RelativeLayout>
     </RelativeLayout>

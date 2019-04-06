@@ -26,11 +26,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
-    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next;
+    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice;
     private MediaPlayer mediaPlayer;
     private PlayerControl playerControl;
-    private List<String> playQueue=new ArrayList<>();
-    private PlayListner listner;
+    private List<MediaInfo> playQueue=new ArrayList<>();
+    private PlayListener listner;
     private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false;
     private int playPosition=-1;
     private Context mcontext;
@@ -40,7 +40,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private AudioManager audioManager;
     public MediaPlayerControllerView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        inflate(context,R.layout.media_player_controller_layout,this);
+        inflate(context, R.layout.media_player_controller_layout,this);
         initView();
         initAction();
     }
@@ -56,6 +56,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         next=findViewById(R.id.next);
         volume_img=findViewById(R.id.volume_img);
         volume_percent=findViewById(R.id.volume_percent);
+        isLoadingNotice=findViewById(R.id.isloading_notice);
 
         control=findViewById(R.id.control_layout);
     }
@@ -75,7 +76,6 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     if(onPrepared){
                         progress_position=mediaPlayer.getCurrentPosition();
                     }
-
                     currentPosition.setText(timeFormat(progress_position));
                     if(total_length==0){
                         progress_seekbar.setProgress(0);
@@ -111,21 +111,38 @@ public class MediaPlayerControllerView extends RelativeLayout{
     public void setOnErrorAutoNext(boolean autoNext){
         onErrorAutoNext=autoNext;
     }
-    public int addToPlayQueue(String url){
-        if(url!=null&&!playQueue.contains(url)){
-            playQueue.add(url);
+    public int addToPlayQueue(MediaInfo mediaInfo){
+        if(mediaInfo.notNull()){
+            mediaInfo.setPosition(playQueue.size());
+            playQueue.add(mediaInfo);
             return playQueue.size()-1;
         }
         return -1;
     }
-    public boolean Play(String url){
+    public void addListToPlayQueue(List<MediaInfo> mediaInfos){
+        int count=playQueue.size();
+        for(MediaInfo mediaInfo:mediaInfos){
+            mediaInfo.setPosition(count);
+            playQueue.add(mediaInfo);
+            count++;
+        }
+
+    }
+    public boolean isPlaying(){
+        if(hasInit&&playPosition>=0&&onPrepared){
+            return mediaPlayer.isPlaying();
+        }
+        return false;
+    }
+    public boolean Play(MediaInfo mediaInfo){
         if(hasInit){
-            if(url!=null&&!playQueue.contains(url)){
-                playQueue.add(url);
-            }else if(url==null){
+            if(mediaInfo.notNull()){
+                mediaInfo.setPosition(playQueue.size());
+                playQueue.add(mediaInfo);
+            }else{
                 return false;
             }
-            return playerControl.play(url);
+            return playerControl.play(mediaInfo);
         }
         return false;
     }
@@ -134,18 +151,37 @@ public class MediaPlayerControllerView extends RelativeLayout{
             playPosition=-1;
             return playerControl.play();
         }
-
         return false;
     }
     public boolean Start(){
         if(hasInit){
-            return playerControl.play();
+            if(playPosition>=0){
+                if(!mediaPlayer.isPlaying()){
+                    if(!onPrepared){
+                        toastS("资源加载中...");
+                        startApause.setBackgroundResource(R.drawable.bofang);
+                    }
+                    return playerControl.play();
+                }
+            }
         }
         return false;
     }
     public void Pause(){
         if(hasInit){
             playerControl.pause();
+        }
+    }
+    public void Last(){
+        if(playPosition>=0){
+            playPosition=(playPosition-1)%playQueue.size();
+            playerControl.play(playQueue.get(playPosition));
+        }
+    }
+    public void Next(){
+        if(playPosition>=0){
+            playPosition=(playPosition+1)%playQueue.size();
+            playerControl.play(playQueue.get(playPosition));
         }
     }
     public boolean Destory(){
@@ -168,11 +204,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
             playPosition=-1;
         }
     }
-    public void addListToPlayQueue(List<String> urls){
-        playQueue.addAll(urls);
-    }
 
-    public void setPlayChangeListenser(PlayListner listener){
+
+    public void setPlayChangeListenser(PlayListener listener){
         if(listener!=null){
             this.listner=listener;
             hasListener=true;
@@ -181,8 +215,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
     public int getNowPlayPosition(){
         return playPosition;
     }
-    public List<String> getPlayQueue(){
-        List<String> queue = new ArrayList<>(playQueue);
+    public List<MediaInfo> getPlayQueue(){
+        List<MediaInfo> queue = new ArrayList<>(playQueue);
         return queue;
     }
 
@@ -209,6 +243,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     if(!mediaPlayer.isPlaying()&&onPrepared) {
                         mediaPlayer.start();
                         startApause.setBackgroundResource(R.drawable.zanting);
+                        if(hasListener){
+                            listner.beginPlay(playPosition);
+                        }
                     }
                     return true;
                 }else {
@@ -221,16 +258,17 @@ public class MediaPlayerControllerView extends RelativeLayout{
             }
 
             @Override
-            public boolean play(String url) {
+            public boolean play(MediaInfo mediaInfo) {
                 try {
                     startApause.setBackgroundResource(R.drawable.bofang);
                     progress_position=0;
                     total_length=0;
                     onPrepared=false;
-                    playPosition=playQueue.indexOf(url);
+                    isLoadingNotice.setVisibility(VISIBLE);
+                    playPosition=mediaInfo.getPosition();
                     mediaPlayer.stop();
                     mediaPlayer=new MediaPlayer();
-                    mediaPlayer.setDataSource(url);
+                    mediaPlayer.setDataSource(mediaInfo.getUrl());
                     mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                     mediaPlayer.prepareAsync();
                     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -238,6 +276,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                         public void onPrepared(MediaPlayer mp) {
                             mediaPlayer.start();
                             onPrepared=true;
+                            isLoadingNotice.setVisibility(GONE);
                             total_length=mediaPlayer.getDuration();
                             totalLength.setText(timeFormat(total_length));
                             startApause.setBackgroundResource(R.drawable.zanting);
@@ -260,7 +299,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                         @Override
                         public boolean onError(MediaPlayer mp, int what, int extra) {
-                            toastS("播放错误,error_mesg:"+what);
+                            toastS("播放错误,error_mesg:"+"("+what+","+extra+")");
                             startApause.setBackgroundResource(R.drawable.bofang);
                             Log.d(TAG, "OnError - Error code: " + what + " Extra code: " + extra);
                             switch (what) {
@@ -312,6 +351,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                                     Log.d(TAG, "MEDIA_INFO_VIDEO_TRACK_LAGGING");
                                     break;
                             }
+                            if(hasListener){
+                                listner.onError("Loading Resouce Error",what,extra);
+                            }
                             return !onErrorAutoNext;
                         }
                     });
@@ -324,11 +366,16 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
             @Override
             public void pause() {
-                mediaPlayer.pause();
-                startApause.setBackgroundResource(R.drawable.bofang);
-                if(hasListener){
-                    listner.paused(playPosition);
+                if(playPosition>=0){
+                    if(mediaPlayer.isPlaying()){
+                        mediaPlayer.pause();
+                        startApause.setBackgroundResource(R.drawable.bofang);
+                        if(hasListener){
+                            listner.paused(playPosition);
+                        }
+                    }
                 }
+
             }
 
             @Override
@@ -338,16 +385,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     public void onClick(View v) {
                         if(playPosition>=0){
                             if(mediaPlayer.isPlaying()){
-                                playerControl.pause();
-                                startApause.setBackgroundResource(R.drawable.bofang);
+                                Pause();
                             }else{
-                                playerControl.play();
-                                if(!onPrepared){
-                                    toastS("资源加载中...");
-                                    startApause.setBackgroundResource(R.drawable.bofang);
-                                }else {
-                                    startApause.setBackgroundResource(R.drawable.zanting);
-                                }
+                                Start();
                             }
                         }
 
@@ -360,16 +400,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 last.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(playPosition>=0){
-//                            if(mediaPlayer.isPlaying()){
-//                                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()-10000);
-//                            }else {
-//                                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()-10000);
-//                                playerControl.play();
-//                            }
-                            playPosition=(playPosition-1)%playQueue.size();
-                            playerControl.play(playQueue.get(playPosition));
-                        }
+                       Last();
                     }
                 });
 
@@ -380,17 +411,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 next.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(playPosition>=0){
-//                            if(mediaPlayer.isPlaying()){
-//                                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()+10000);
-//                            }else {
-//                                mediaPlayer.seekTo(mediaPlayer.getCurrentPosition()+10000);
-//                                playerControl.play();
-//                            }
-
-                            playPosition=(playPosition+1)%playQueue.size();
-                            playerControl.play(playQueue.get(playPosition));
-                        }
+                       Next();
                     }
                 });
             }
@@ -487,19 +508,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
         if(isShowToast)Toast.makeText(mcontext, mesg, Toast.LENGTH_LONG).show();
     }
 
-
-    interface PlayListner{
-        void complete(int position);
-        void paused(int position);
-        void beginPlay(int position);
-    }
-
-
 }
+
 
 interface PlayerControl{
    boolean play();
-    boolean play(String url);
+    boolean play(MediaInfo mediaInfo);
     void pause();
     void startApause();
     void last();
