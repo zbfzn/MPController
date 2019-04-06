@@ -23,10 +23,10 @@ import java.util.List;
 import static android.content.ContentValues.TAG;
 
 public class MediaPlayerControllerView extends RelativeLayout{
-
+public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
-    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice;
+    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv;
     private MediaPlayer mediaPlayer;
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
@@ -57,6 +57,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         volume_img=findViewById(R.id.volume_img);
         volume_percent=findViewById(R.id.volume_percent);
         isLoadingNotice=findViewById(R.id.isloading_notice);
+        playModel_tv=findViewById(R.id.play_model);
 
         control=findViewById(R.id.control_layout);
     }
@@ -174,14 +175,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
     }
     public void Last(){
         if(playPosition>=0){
-            playPosition=(playPosition-1)%playQueue.size();
-            playerControl.play(playQueue.get(playPosition));
+           playLast(0,playPosition);
         }
     }
     public void Next(){
         if(playPosition>=0){
-            playPosition=(playPosition+1)%playQueue.size();
-            playerControl.play(playQueue.get(playPosition));
+            playNext(playPosition,playQueue.size()-1);
         }
     }
     public boolean Destory(){
@@ -289,8 +288,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
-                            playPosition=(playPosition+1)%playQueue.size();
-                            play(playQueue.get(playPosition));
+                            playCompleted();
                             if(hasListener){
                                 listner.complete(playPosition);
                             }
@@ -482,7 +480,113 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 }
             }
         });
+        setListenerChangePlayModel();
 
+    }
+    private void Stop(){
+        if(hasInit){
+            mediaPlayer.stop();
+        }
+    }
+    private void setListenerChangePlayModel(){
+        playModel_tv.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playModel=(playModel+1)%4;
+                switch (playModel){
+                    case 0:
+                        playModel_tv.setBackgroundResource(R.drawable.shunxubofang);
+                        break;
+                    case 1:
+                        playModel_tv.setBackgroundResource(R.drawable.xunhuan);
+                        break;
+                    case 2:
+                        playModel_tv.setBackgroundResource(R.drawable.danquxunhuan);
+                        break;
+                    case 3:
+                        playModel_tv.setBackgroundResource(R.drawable.suijibofang);
+                        break;
+                }
+            }
+        });
+    }
+    private void playCompleted(){
+        switch (playModel){
+            case 0:
+                int position=playPosition+1;
+                if(position>playQueue.size()-1){
+                    Stop();
+                }else {
+                    playPosition=position;
+                    playerControl.play(playQueue.get(playPosition));
+                }
+                break;
+            case 1:
+                int position1=(playPosition+1)%playQueue.size();
+                    playPosition=position1;
+                    playerControl.play(playQueue.get(playPosition));
+                break;
+            case 2:
+                playerControl.play(playQueue.get(playPosition));
+                break;
+            case 3:
+                int position3=(int)(Math.random()*playQueue.size());
+                playPosition=position3;
+                playerControl.play(playQueue.get(playPosition));
+                break;
+        }
+    }
+    private void playNext(int start,int end){
+        switch (playModel){
+            case 0:
+                int position=playPosition+1;
+                if(position>playQueue.size()-1){
+                    Stop();
+                }else {
+                    playPosition=position;
+                    playerControl.play(playQueue.get(playPosition));
+                }
+                break;
+            case 1:
+                int position1=(playPosition+1)%playQueue.size();
+                playPosition=position1;
+                playerControl.play(playQueue.get(playPosition));
+                break;
+            case 2:
+                playerControl.play(playQueue.get(playPosition));
+                break;
+            case 3:
+                int position3=(int)(Math.random()*(end+1))-start;
+                playPosition=position3;
+                playerControl.play(playQueue.get(playPosition));
+                break;
+        }
+    }
+    private void playLast(int start,int end){
+        switch (playModel){
+            case 0:
+                int position=playPosition-1;
+                if(position<0){
+                    Stop();
+                }else {
+                    playPosition=position;
+                    playerControl.play(playQueue.get(playPosition));
+                }
+                break;
+            case 1:
+                int position1=(playPosition-1)%playQueue.size();
+                playPosition=position1;
+                playerControl.play(playQueue.get(playPosition));
+                break;
+            case 2:
+                playerControl.play(playQueue.get(playPosition));
+                break;
+            case 3:
+                int position3=(int)(Math.random()*(end+1))-start;
+                playPosition=position3;
+                playerControl.play(playQueue.get(playPosition));
+                break;
+        }
     }
     private String timeFormat(int media_time){
         int seconds=media_time/1000;
