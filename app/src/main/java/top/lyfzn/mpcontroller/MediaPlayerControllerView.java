@@ -8,9 +8,14 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -20,13 +25,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.shaohui.bottomdialog.BottomDialog;
+
 import static android.content.ContentValues.TAG;
 
 public class MediaPlayerControllerView extends RelativeLayout{
 public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
-    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv;
+    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv;
     private MediaPlayer mediaPlayer;
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
@@ -34,6 +41,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false;
     private int playPosition=-1;
     private Context mcontext;
+    private AppCompatActivity appCompatActivity;
     private Handler progress,volume;
     private Runnable progress_r,volume_r;
     private int progress_position=0,volume_position=0,total_length=0,max_volume=0,history_volume_percent=50;
@@ -58,15 +66,18 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         volume_percent=findViewById(R.id.volume_percent);
         isLoadingNotice=findViewById(R.id.isloading_notice);
         playModel_tv=findViewById(R.id.play_model);
+        play_list_tv=findViewById(R.id.play_list);
+        media_tag_tv=findViewById(R.id.media_tag);
 
         control=findViewById(R.id.control_layout);
     }
 
-    public void initPlayer(Context mcontext,boolean controllerVisible){
+    public void initPlayer(Context mcontext,AppCompatActivity appCompatActivity,boolean controllerVisible){
         mediaPlayer=new MediaPlayer();
         audioManager=(AudioManager) mcontext.getSystemService(Context.AUDIO_SERVICE);
         hasInit=true;
         this.mcontext=mcontext;
+        this.appCompatActivity=appCompatActivity;
         setControllerVisiblity(controllerVisible);
         progress=new Handler();
         volume=new Handler();
@@ -146,6 +157,11 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             return playerControl.play(mediaInfo);
         }
         return false;
+    }
+    public void Play(int position){
+        if(position>=0&&position<playQueue.size()){
+            Play(playQueue.get(position));
+        }
     }
     public boolean Play(){
         if(hasInit){
@@ -251,19 +267,24 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     if (playQueue.size() > 0) {
                         return play(playQueue.get(0));
                     } else {
+                        toastS("资源列表为空");
+                        isLoadingNotice.setText("资源列表为空");
+                        isLoadingNotice.setVisibility(VISIBLE);
                         return false;
                     }
                 }
             }
 
             @Override
-            public boolean play(MediaInfo mediaInfo) {
+            public boolean play(final MediaInfo mediaInfo) {
                 try {
                     startApause.setBackgroundResource(R.drawable.bofang);
                     progress_position=0;
                     total_length=0;
                     onPrepared=false;
+                    isLoadingNotice.setText("资源加载中...");
                     isLoadingNotice.setVisibility(VISIBLE);
+                    media_tag_tv.setVisibility(GONE);
                     playPosition=mediaInfo.getPosition();
                     mediaPlayer.stop();
                     mediaPlayer=new MediaPlayer();
@@ -276,6 +297,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             mediaPlayer.start();
                             onPrepared=true;
                             isLoadingNotice.setVisibility(GONE);
+                            isLoadingNotice.setText("等待资源加载");
+                            media_tag_tv.setVisibility(VISIBLE);
+                            media_tag_tv.setText(mediaInfo.getTag());
                             total_length=mediaPlayer.getDuration();
                             totalLength.setText(timeFormat(total_length));
                             startApause.setBackgroundResource(R.drawable.zanting);
@@ -387,6 +411,8 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             }else{
                                 Start();
                             }
+                        }else {
+                            Play();
                         }
 
                     }
@@ -481,6 +507,51 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             }
         });
         setListenerChangePlayModel();
+        play_list_tv.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(appCompatActivity!=null){
+                    final BottomDialog bottomDialog=BottomDialog.create(appCompatActivity.getSupportFragmentManager())
+                            .setLayoutRes(R.layout.dialog_layout)
+                            .setDimAmount(0.1f)// Dialog window 背景色深度 范围：0 到 1，默认是0.2f
+                            .setCancelOutside(true);     // 点击外部区域是否关闭，默认true
+                    bottomDialog.setViewListener(new BottomDialog.ViewListener() {      // 可以进行一些必要对View的操作
+                        @Override
+                        public void bindView(View v) {
+                            ListView listView=v.findViewById(R.id.list_view);
+                            Button bt=v.findViewById(R.id.dialog_cancel);
+                            List<String> tags=new ArrayList<>();
+                            for(int i=0;i<playQueue.size();i++){
+                                if(playPosition==i){
+                                    tags.add(playQueue.get(i).getTag()+"  (正在播放)");
+                                }else{
+                                    tags.add(playQueue.get(i).getTag());
+                                }
+                            }
+
+                            ArrayAdapter adapter=new ArrayAdapter(mcontext,android.R.layout.simple_list_item_1,tags);
+                            listView.setAdapter(adapter);
+
+                            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                    Play(position);
+                                    bottomDialog.dismiss();
+                                }
+                            });
+                            bt.setOnClickListener(new OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    bottomDialog.dismiss();
+                                }
+                            });
+                        }
+                    });
+                    bottomDialog.show();
+                }
+
+            }
+        });
 
     }
     private void Stop(){

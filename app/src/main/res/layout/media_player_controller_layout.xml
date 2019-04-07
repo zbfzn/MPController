@@ -28,7 +28,7 @@
                     android:layout_height="wrap_content"
                     android:text="00:00"
                     android:textSize="10dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/mywhite"
                     android:gravity="end"
                     android:layout_gravity="center_vertical"/>
                 <SeekBar
@@ -40,7 +40,7 @@
                     android:maxHeight="5dp"
                     android:maxWidth="5dp"
                     android:thumb="@drawable/seek_item"
-                    android:progressBackgroundTint="@color/white"/>
+                    android:progressBackgroundTint="@color/mywhite"/>
                 <TextView
                     android:id="@+id/total_length"
                     android:layout_width="0dp"
@@ -48,7 +48,7 @@
                     android:layout_height="wrap_content"
                     android:text="00:00"
                     android:textSize="10dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/mywhite"
                     android:layout_gravity="center_vertical"/>
             </LinearLayout>
             <LinearLayout
@@ -115,14 +115,14 @@
                     android:layout_height="wrap_content"
                     android:thumb="@drawable/seek_item"
                     android:layout_gravity="center_vertical"
-                    android:progressBackgroundTint="@color/white"/>
+                    android:progressBackgroundTint="@color/mywhite"/>
                 <TextView
                     android:id="@+id/volume_percent"
                     android:layout_width="35dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:text="100%"
-                    android:textColor="@color/white"
+                    android:textColor="@color/mywhite"
                     android:textSize="10sp"/>
             </LinearLayout>
             <LinearLayout
@@ -135,20 +135,35 @@
                 android:layout_weight="2"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <TextView
-                    android:id="@+id/play_model"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:background="@drawable/shunxubofang"
-                    android:layout_marginEnd="30dp"
-                    android:layout_gravity="end"/>
+
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_gravity="end">
+                    <TextView
+                        android:id="@+id/play_model"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/shunxubofang"
+                        android:layout_marginEnd="20dp" />
+                    <TextView
+                        android:id="@+id/play_list"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:background="@drawable/liebiao"
+                        android:layout_marginEnd="30dp" />
+                </LinearLayout>
+
+
             </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
             android:id="@+id/control_bottom"
             android:layout_width="match_parent"
-            android:layout_height="10dp"
+            android:layout_height="15dp"
             android:layout_alignParentBottom="true"
             android:orientation="vertical">
             <TextView
@@ -156,10 +171,28 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:text="资源加载中..."
-                android:textSize="6sp"
+                android:text="等待资源加载"
+                android:textSize="10sp"
                 android:textColor="@color/colorAccent"
                 android:visibility="visible"/>
+
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/control_bottom_tag"
+            android:layout_width="match_parent"
+            android:layout_height="15dp"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical">
+            <TextView
+                android:id="@+id/media_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text=""
+                android:textSize="10sp"
+                android:textColor="#000000"
+                android:visibility="gone"/>
+
         </LinearLayout>
 
     </RelativeLayout>
