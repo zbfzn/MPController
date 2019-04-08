@@ -7,7 +7,7 @@
         android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:background="@color/white"
+        android:background="@color/mywhite"
         android:dividerHeight="1dp"
         android:divider="#aaaaaa">
 
@@ -16,6 +16,7 @@
         android:id="@+id/dialog_cancel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#aaaaaa"
-        android:text="取消"/>
+        android:background="@drawable/click_select"
+        android:text="取消"
+        android:textColor="#000000"/>
 </LinearLayout>

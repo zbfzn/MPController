@@ -4,12 +4,14 @@ package top.lyfzn.mpcontroller;
  * Play()、Start()不能同时使用
  */
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -46,14 +48,50 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private Runnable progress_r,volume_r;
     private int progress_position=0,volume_position=0,total_length=0,max_volume=0,history_volume_percent=50;
     private AudioManager audioManager;
+
+    public MediaPlayerControllerView(Context context) {
+        super(context);
+        inflate(context, R.layout.media_player_controller_layout,this);
+    }
+
     public MediaPlayerControllerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         inflate(context, R.layout.media_player_controller_layout,this);
+        mcontext=context;
+        hasInit=true;
+    }
+    @Override
+    protected void onFinishInflate() {
+        super.onFinishInflate();
         initView();
         initAction();
+        setChild();
     }
 
-   private void initView(){
+    private void setChild(){
+        if(getChildCount()==2){
+            marginChildView(getChildAt(1));
+        }
+    }
+    private int dp2px(int dp){
+        DisplayMetrics displayMetrics=new DisplayMetrics();
+        ((Activity) mcontext).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        return (dp*displayMetrics.densityDpi)/displayMetrics.DENSITY_DEFAULT;
+    }
+    private void marginChildView(View view){
+        int width_child,height_child,control_layout_w,control_layout_h,control_main_w,control_main_h,margin_bottom,width,hight;
+        LayoutParams layoutParamV=(LayoutParams)view.getLayoutParams();
+        width_child=layoutParamV.width;
+        height_child=layoutParamV.height;
+        margin_bottom=dp2px(70)+dp2px(15);
+        LayoutParams layoutParamRV=new LayoutParams(width_child,height_child);
+        layoutParamRV.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
+        layoutParamRV.bottomMargin=margin_bottom;
+        view.setLayoutParams(layoutParamRV);
+
+    }
+
+    private void initView(){
         progress_seekbar=findViewById(R.id.progress_seekbar);
         volume_seekbar=findViewById(R.id.seekbar_volume_progress);
 
@@ -72,11 +110,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         control=findViewById(R.id.control_layout);
     }
 
-    public void initPlayer(Context mcontext,AppCompatActivity appCompatActivity,boolean controllerVisible){
+    public void initPlayer(AppCompatActivity appCompatActivity,boolean controllerVisible){
         mediaPlayer=new MediaPlayer();
         audioManager=(AudioManager) mcontext.getSystemService(Context.AUDIO_SERVICE);
-        hasInit=true;
-        this.mcontext=mcontext;
         this.appCompatActivity=appCompatActivity;
         setControllerVisiblity(controllerVisible);
         progress=new Handler();
@@ -116,6 +152,45 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
        progress.postDelayed(progress_r,0);
        volume.postDelayed(volume_r,0);
     }
+    public void addViewToAboveController(int resourceId){
+        int count=getChildCount();
+        if(resourceId>=0&&hasInit&&count<2){
+            View view1= inflate(mcontext,resourceId,null);
+            addView(view1);
+            marginChildView(view1);
+        }
+    }
+    public void addViewToAboveController(int resourceId, OnBindPlayerViewListener onBindViewListener){
+        int count=getChildCount();
+        if(resourceId>=0&&onBindViewListener!=null&&hasInit&&count<2){
+            View view1= inflate(mcontext,resourceId,null);
+            addView(view1);
+            marginChildView(view1);
+            onBindViewListener.OnBindView(view1);
+        }
+    }
+
+    public void addViewToAboveController(int resourceId,int widthPx,int heightPx){
+        int count=getChildCount();
+        if(resourceId>=0&&hasInit&&count<2){
+            View view1= inflate(mcontext,resourceId,null);
+            LayoutParams layoutParams=new LayoutParams(widthPx,heightPx);
+            view1.setLayoutParams(layoutParams);
+            addView(view1);
+            marginChildView(view1);
+        }
+    }
+    public void addViewToAboveController(int resourceId, int widthPx, int heightPx, OnBindPlayerViewListener onBindViewListener){
+        int count=getChildCount();
+        if(resourceId>=0&&onBindViewListener!=null&&hasInit&&count<2){
+            View view1= inflate(mcontext,resourceId,null);
+            LayoutParams layoutParams=new LayoutParams(widthPx,heightPx);
+            view1.setLayoutParams(layoutParams);
+            addView(view1);
+            marginChildView(view1);
+            onBindViewListener.OnBindView(view1);
+        }
+    }
 
     public void setIsShowPlayStatusChangeToast(boolean isShow){
         isShowToast=isShow;
@@ -149,8 +224,10 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     public boolean Play(MediaInfo mediaInfo){
         if(hasInit){
             if(mediaInfo.notNull()){
-                mediaInfo.setPosition(playQueue.size());
-                playQueue.add(mediaInfo);
+                if(mediaInfo.getPosition()<0) {
+                    mediaInfo.setPosition(playQueue.size());
+                    playQueue.add(mediaInfo);
+                }
             }else{
                 return false;
             }
@@ -321,7 +398,8 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                         @Override
                         public boolean onError(MediaPlayer mp, int what, int extra) {
-                            toastS("播放错误,error_mesg:"+"("+what+","+extra+")");
+                            String str=(playPosition>=0)?playQueue.get(playPosition).getTag():"";
+                            toastS("播放‘"+str+"’错误,error_mesg:"+"("+what+","+extra+")");
                             startApause.setBackgroundResource(R.drawable.bofang);
                             Log.d(TAG, "OnError - Error code: " + what + " Extra code: " + extra);
                             switch (what) {
@@ -510,7 +588,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         play_list_tv.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(appCompatActivity!=null){
+                if(isSupportAppcompatActivity()&&playQueue.size()>0){
                     final BottomDialog bottomDialog=BottomDialog.create(appCompatActivity.getSupportFragmentManager())
                             .setLayoutRes(R.layout.dialog_layout)
                             .setDimAmount(0.1f)// Dialog window 背景色深度 范围：0 到 1，默认是0.2f
@@ -553,6 +631,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             }
         });
 
+    }
+    private boolean isSupportAppcompatActivity(){
+        return appCompatActivity!=null;
     }
     private void Stop(){
         if(hasInit){

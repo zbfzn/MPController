@@ -2,7 +2,7 @@ package top.lyfzn.mpcontroller;
 
 public class MediaInfo {
     private String url,Tag;
-    private int position;
+    private int position=-1;
 
 
     public MediaInfo(String url,String tag){
