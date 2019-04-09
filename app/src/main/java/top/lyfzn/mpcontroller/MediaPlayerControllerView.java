@@ -44,7 +44,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
     private PlayListener listner;
-    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false;
+    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false,isShowLrc=true;
     private int playPosition=-1;
     private Context mcontext;
     private AppCompatActivity appCompatActivity;
@@ -141,6 +141,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     }
 
                 }
+                lrc_tv.setVisibility(isShowLrc?VISIBLE:GONE);
                 progress.postDelayed(this,0);
             }
         };
@@ -172,6 +173,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
        progress.postDelayed(progress_r,0);
        volume.postDelayed(volume_r,0);
        resouce_ready.postDelayed(resouce_ready_r,0);
+    }
+    public void setIsShowLrc(boolean isshow){
+        isShowLrc=isshow;
     }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
