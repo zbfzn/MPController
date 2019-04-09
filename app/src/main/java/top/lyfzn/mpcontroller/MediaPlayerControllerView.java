@@ -10,6 +10,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Html;
+import android.text.Spanned;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -25,7 +27,9 @@ import android.widget.Toast;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.shaohui.bottomdialog.BottomDialog;
 
@@ -35,7 +39,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
 public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
-    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv;
+    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv,lrc_tv;
     private MediaPlayer mediaPlayer;
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
@@ -44,10 +48,12 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private int playPosition=-1;
     private Context mcontext;
     private AppCompatActivity appCompatActivity;
-    private Handler progress,volume,resouce_ready;
-    private Runnable progress_r,volume_r,resouce_ready_r;
+    private Handler progress,volume,resouce_ready,lrc_h,textColor_h;
+    private Runnable progress_r,volume_r,resouce_ready_r,lrc_r,textColor_r;
     private int progress_position=0,volume_position=0,total_length=0,max_volume=0,history_volume_percent=50;
     private AudioManager audioManager;
+    private Spanned spanned_lrc=Html.fromHtml("");
+    private Map<Long, LrcUtil.LrcContent> lrcinfo=new HashMap<>();
 
     public MediaPlayerControllerView(Context context) {
         super(context);
@@ -84,6 +90,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         playModel_tv=findViewById(R.id.play_model);
         play_list_tv=findViewById(R.id.play_list);
         media_tag_tv=findViewById(R.id.media_tag);
+        lrc_tv=findViewById(R.id.lrc_show);
 
         control=findViewById(R.id.control_layout);
     }
@@ -118,6 +125,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         progress=new Handler();
         volume=new Handler();
         resouce_ready=new Handler();
+        lrc_h=new Handler();
         progress_r=new Runnable() {
             @Override
             public void run() {
@@ -133,7 +141,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     }
 
                 }
-                progress.postDelayed(this,10);
+                progress.postDelayed(this,0);
             }
         };
         volume_r=new Runnable() {
@@ -299,6 +307,12 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             volume.removeCallbacks(volume_r);
             progress.removeCallbacks(progress_r);
             resouce_ready.removeCallbacks(resouce_ready_r);
+            if(lrc_r!=null){
+                lrc_h.removeCallbacks(lrc_r);
+            }
+            if(textColor_r!=null){
+                textColor_h.removeCallbacks(textColor_r);
+            }
             return true;
         }
         return false;
@@ -373,6 +387,8 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     progress_position=0;
                     total_length=0;
                     onPrepared=false;
+                    spanned_lrc=Html.fromHtml("");
+                    lrc_tv.setText(spanned_lrc);
                     isLoadingNotice.setText("资源加载中...");
                     isLoadingNotice.setVisibility(VISIBLE);
                     media_tag_tv.setVisibility(GONE);
@@ -393,6 +409,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             media_tag_tv.setText(mediaInfo.getTag());
                             total_length=mediaPlayer.getDuration();
                             totalLength.setText(timeFormat(total_length));
+                            showLrc(mediaInfo.getLrc());
                             startApause.setBackgroundResource(R.drawable.zanting);
                             toastS("缓冲完成，即将播放");
                             if(hasListener){
@@ -658,6 +675,85 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             }
         });
 
+    }
+    private void showLrc(String lrc){
+        if(lrc.equals("")){
+            spanned_lrc=Html.fromHtml("暂无歌词");
+            lrc_tv.setText(spanned_lrc);
+        }else{
+            try {
+                LrcUtil.LrcParser lp = new LrcUtil.LrcParser();
+                final LrcUtil.LrcInfo info = lp.parserLrc(lrc);
+                final Map<Integer, LrcUtil.LrcContent> lrcinfo_1 = info.getInfos_int();
+                if(lrc_r!=null) {
+                    lrc_h.removeCallbacks(lrc_r);
+                }
+                lrc_r=new Runnable() {
+                    private String line="";
+                    private int position=-1,str_position=0;
+                    private int scale=1;
+                    private long length=999999999;
+                    private int startProgress=0;
+                    private boolean isNextLine=true;
+                    @Override
+                    public void run() {
+                        int pro=progress_position;
+                        int key=pro/1000;
+                        LrcUtil.LrcContent lrcC=lrcinfo_1.get(key);
+                        if(key!=position){
+                            isNextLine=true;
+                            str_position=0;
+                        }
+                        if(lrcC!=null&&isNextLine){
+                            position=key;
+                            startProgress=pro;
+                            line=lrcC.getContent();
+                            length=lrcC.getLength();
+                            scale=(int)length/line.length();
+//                            lrc_tv.setText(""+progress_position+line);
+
+                            textColor_h=new Handler();
+                            textColor_r=new Runnable() {
+                                @Override
+                                public void run() {
+                                    double percent=((progress_position-startProgress)*1.0)/(int)length;
+                                    str_position=(int)(line.length()*(percent+0.1));
+                                    if(str_position>line.length()){
+                                        str_position=line.length();
+                                    }
+                                    System.out.println(startProgress+"----"+progress_position+"---"+length+"---"+line+"----"+(progress_position-startProgress)+"----"+((progress_position-startProgress)*1.0)/(int)length);
+                                    lrc_tv.setText(setTextColor(line,str_position));
+                                    textColor_h.postDelayed(this,0);
+                                }
+                            };
+                            textColor_h.postDelayed(textColor_r,0);
+                            isNextLine=false;
+                        }
+//                        lrc_tv.setText(""+progress_position);
+                            lrc_h.postDelayed(lrc_r,0);
+                    }
+                };
+                lrc_h.postDelayed(lrc_r,0);
+            }catch (Exception e){
+                spanned_lrc=Html.fromHtml("暂无歌词");
+                lrc_tv.setText(spanned_lrc);
+            }
+        }
+    }
+    private String lrc_str="[ti:余香]\n[ar:张小九]\n[al:余香]\n[by:]\n[offset:0]\n[00:00.00]余香 - 张小九\n[00:10.58]词：卡夫\n[00:21.16]曲：张小九\n[00:31.74]划一根火柴\n[00:33.52]将慵倦的夜点亮\n[00:36.13]\n[00:39.18]吐出一缕烟\n[00:40.51]\n[00:41.03]飘向半掩的窗\n[00:43.35]\n[00:46.71]你纵身跃入酒杯\n[00:48.99]\n[00:49.57]梦从此溺亡\n[00:50.84]\n[00:54.41]心门上一把锁\n[00:56.65]钥匙在你手上\n[00:58.42]\n[01:01.80]快将尘埃掸落\n[01:03.94]\n[01:05.48]别将你眼眸弄脏\n[01:07.68]\n[01:09.12]或许吧\n[01:10.22]谈笑中你早已淡忘\n[01:14.04]\n[01:16.86]而我在颠沛中\n[01:18.99]\n[01:20.50]已饱经一脸沧桑\n[01:22.79]\n[01:24.20]思念需要时间\n[01:26.47]\n[01:27.36]慢慢调养\n[01:28.41]\n[02:05.53]往日记起来\n[02:06.78]\n[02:07.61]暂能慰籍心肠\n[02:09.68]\n[02:12.87]详尽来回首\n[02:14.31]\n[02:15.01]才忽觉是荒唐\n[02:16.90]\n[02:20.47]别惦记岸边垂的杨\n[02:22.72]\n[02:23.35]你白色衣裳\n[02:24.65]\n[02:28.30]只是发间的雨\n[02:30.48]想来仍留余香\n[02:31.92]\n[02:35.52]快将尘埃掸落\n[02:37.75]\n[02:39.28]别将你眼眸弄脏\n[02:41.54]\n[02:42.97]或许吧\n[02:44.05]谈笑中你早已淡忘\n[02:47.76]\n[02:50.53]而我在颠沛中\n[02:52.83]\n[02:54.24]已饱经一脸沧桑\n[02:56.56]\n[02:57.92]思念需要时间\n[03:00.82]慢慢调养\n[03:02.65]\n[03:05.44]快将尘埃掸落\n[03:07.62]\n[03:09.10]别将你眼眸弄脏\n[03:11.54]\n[03:12.96]或许吧\n[03:14.01]谈笑中你早已淡忘\n[03:18.34]\n[03:20.47]而我在颠沛中\n[03:22.77]\n[03:24.26]已饱经一脸沧桑\n[03:26.53]\n[03:27.87]思念需要时间\n[03:30.17]\n[03:30.93]慢慢调养\n[03:32.32]\n[03:35.48]思念需要时间\n[03:37.71]\n[03:45.75]慢慢调养";
+    public void prase(String lrc){
+        String ss="hhgj";
+        setTextColor(ss,ss.length());
+        MediaInfo mediaInfo=new MediaInfo("","","hahha");
+        mediaInfo.setLrc("呼吁");
+    }
+    private Spanned setTextColor(String str, int position){
+        if(position>str.length()){
+            return Html.fromHtml(str);
+        }
+        String str1=str.substring(0,position);
+        String str2=str.substring(position,str.length());
+        return Html.fromHtml("<font color='#eeee00'>"+str1+"</font>"+str2);
     }
     private boolean isSupportAppcompatActivity(){
         return appCompatActivity!=null;
