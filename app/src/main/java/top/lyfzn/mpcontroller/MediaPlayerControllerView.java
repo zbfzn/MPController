@@ -44,8 +44,8 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private int playPosition=-1;
     private Context mcontext;
     private AppCompatActivity appCompatActivity;
-    private Handler progress,volume;
-    private Runnable progress_r,volume_r;
+    private Handler progress,volume,resouce_ready;
+    private Runnable progress_r,volume_r,resouce_ready_r;
     private int progress_position=0,volume_position=0,total_length=0,max_volume=0,history_volume_percent=50;
     private AudioManager audioManager;
 
@@ -68,6 +68,25 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         setChild();
     }
 
+
+    private void initView(){
+        progress_seekbar=findViewById(R.id.progress_seekbar);
+        volume_seekbar=findViewById(R.id.seekbar_volume_progress);
+
+        currentPosition=findViewById(R.id.current_position);
+        totalLength=findViewById(R.id.total_length);
+        last=findViewById(R.id.last);
+        startApause=findViewById(R.id.start_pause);
+        next=findViewById(R.id.next);
+        volume_img=findViewById(R.id.volume_img);
+        volume_percent=findViewById(R.id.volume_percent);
+        isLoadingNotice=findViewById(R.id.isloading_notice);
+        playModel_tv=findViewById(R.id.play_model);
+        play_list_tv=findViewById(R.id.play_list);
+        media_tag_tv=findViewById(R.id.media_tag);
+
+        control=findViewById(R.id.control_layout);
+    }
     private void setChild(){
         if(getChildCount()==2){
             marginChildView(getChildAt(1));
@@ -91,25 +110,6 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
 
     }
 
-    private void initView(){
-        progress_seekbar=findViewById(R.id.progress_seekbar);
-        volume_seekbar=findViewById(R.id.seekbar_volume_progress);
-
-        currentPosition=findViewById(R.id.current_position);
-        totalLength=findViewById(R.id.total_length);
-        last=findViewById(R.id.last);
-        startApause=findViewById(R.id.start_pause);
-        next=findViewById(R.id.next);
-        volume_img=findViewById(R.id.volume_img);
-        volume_percent=findViewById(R.id.volume_percent);
-        isLoadingNotice=findViewById(R.id.isloading_notice);
-        playModel_tv=findViewById(R.id.play_model);
-        play_list_tv=findViewById(R.id.play_list);
-        media_tag_tv=findViewById(R.id.media_tag);
-
-        control=findViewById(R.id.control_layout);
-    }
-
     public void initPlayer(AppCompatActivity appCompatActivity,boolean controllerVisible){
         mediaPlayer=new MediaPlayer();
         audioManager=(AudioManager) mcontext.getSystemService(Context.AUDIO_SERVICE);
@@ -117,6 +117,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         setControllerVisiblity(controllerVisible);
         progress=new Handler();
         volume=new Handler();
+        resouce_ready=new Handler();
         progress_r=new Runnable() {
             @Override
             public void run() {
@@ -149,8 +150,20 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                 volume.postDelayed(this,10);
             }
         };
+        resouce_ready_r=new Runnable() {
+            @Override
+            public void run() {
+                if(playQueue.size()==0){
+                    resouce_ready.postDelayed(this,0);
+                }else {
+                    toastS("资源准备就绪");
+                    isLoadingNotice.setText("资源准备就绪");
+                }
+            }
+        };
        progress.postDelayed(progress_r,0);
        volume.postDelayed(volume_r,0);
+       resouce_ready.postDelayed(resouce_ready_r,0);
     }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
@@ -285,6 +298,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             hasInit=false;
             volume.removeCallbacks(volume_r);
             progress.removeCallbacks(progress_r);
+            resouce_ready.removeCallbacks(resouce_ready_r);
             return true;
         }
         return false;
@@ -593,10 +607,11 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             .setLayoutRes(R.layout.dialog_layout)
                             .setDimAmount(0.1f)// Dialog window 背景色深度 范围：0 到 1，默认是0.2f
                             .setCancelOutside(true);     // 点击外部区域是否关闭，默认true
-                    bottomDialog.setViewListener(new BottomDialog.ViewListener() {      // 可以进行一些必要对View的操作
+                            bottomDialog.setViewListener(new BottomDialog.ViewListener() {      // 可以进行一些必要对View的操作
                         @Override
                         public void bindView(View v) {
-                            ListView listView=v.findViewById(R.id.list_view);
+                            final ListView listView=v.findViewById(R.id.list_view);
+                            TextView toPlayposition=v.findViewById(R.id.to_playposition);
                             Button bt=v.findViewById(R.id.dialog_cancel);
                             List<String> tags=new ArrayList<>();
                             for(int i=0;i<playQueue.size();i++){
@@ -623,9 +638,21 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                                     bottomDialog.dismiss();
                                 }
                             });
+                            toPlayposition.setOnClickListener(new OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    if(playPosition>=0) {
+                                        listView.smoothScrollToPosition(playPosition);
+                                    }
+                                }
+                            });
                         }
                     });
                     bottomDialog.show();
+                }else if(isSupportAppcompatActivity()){
+                    toastS("资源列表为空");
+                    isLoadingNotice.setText("资源列表为空");
+                    isLoadingNotice.setVisibility(VISIBLE);
                 }
 
             }
