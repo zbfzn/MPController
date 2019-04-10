@@ -44,7 +44,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
     private PlayListener listner;
-    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false,isShowLrc=true;
+    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false,isShowLrc=true,nextPlay=false;
     private int playPosition=-1;
     private Context mcontext;
     private AppCompatActivity appCompatActivity;
@@ -392,7 +392,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     total_length=0;
                     onPrepared=false;
                     spanned_lrc=Html.fromHtml("");
-                    lrc_tv.setText(spanned_lrc);
+                    nextPlay=true;
                     isLoadingNotice.setText("资源加载中...");
                     isLoadingNotice.setVisibility(VISIBLE);
                     media_tag_tv.setVisibility(GONE);
@@ -414,6 +414,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             total_length=mediaPlayer.getDuration();
                             totalLength.setText(timeFormat(total_length));
                             showLrc(mediaInfo.getLrc());
+                            nextPlay=false;
                             startApause.setBackgroundResource(R.drawable.zanting);
                             toastS("缓冲完成，即将播放");
                             if(hasListener){
@@ -717,13 +718,30 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             textColor_r=new Runnable() {
                                 @Override
                                 public void run() {
+                                    if(nextPlay){
+                                        line="";
+                                        spanned_lrc=Html.fromHtml("");
+                                        lrc_tv.setText(spanned_lrc);
+                                        return;
+                                    }
                                     double percent=((progress_position-startProgress)*1.0)/(int)length;
+                                    if(percent-1.2>0){
+                                        percent=1.0;
+                                    }
                                     str_position=(int)(line.length()*(percent+0.1));
                                     if(str_position>line.length()){
                                         str_position=line.length();
                                     }
+                                    if(length==999999999){
+                                        str_position=line.length();
+                                    }
                                     System.out.println(startProgress+"----"+progress_position+"---"+length+"---"+line+"----"+(progress_position-startProgress)+"----"+((progress_position-startProgress)*1.0)/(int)length);
-                                    lrc_tv.setText(setTextColor(line,str_position));
+                                    try{
+                                        lrc_tv.setText(setTextColor(line,str_position));
+                                    }catch (Exception e){
+                                        lrc_tv.setText("");
+                                    }
+
                                     textColor_h.postDelayed(this,0);
                                 }
                             };
@@ -742,11 +760,18 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     }
     private Spanned setTextColor(String str, int position){
         if(position>str.length()){
+            position=str.length();
+        }
+        if(position<0){
+           position=0;
+        }
+        try {
+            String str1 = str.substring(0, position);
+            String str2 = str.substring(position, str.length());
+            return Html.fromHtml("<font color='#eeee00'>" + str1 + "</font>" + str2);
+        }catch (Exception e){
             return Html.fromHtml(str);
         }
-        String str1=str.substring(0,position);
-        String str2=str.substring(position,str.length());
-        return Html.fromHtml("<font color='#eeee00'>"+str1+"</font>"+str2);
     }
     private boolean isSupportAppcompatActivity(){
         return appCompatActivity!=null;

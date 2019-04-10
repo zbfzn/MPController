@@ -131,8 +131,8 @@ public class LrcUtil {
                         String timeStr = matcher.group(i);
                         if (i == 1) {
                             // 将第二组中的内容设置为当前的一个时间点
-                            currentTime = strToLong(timeStr);
-                            currentTime_int=strToInt(timeStr);
+                            currentTime = strToLong(timeStr,true);
+                            currentTime_int=strToInt(timeStr,true);
                         }
                     }
 
@@ -165,6 +165,64 @@ public class LrcUtil {
 
                         times++;
                 }
+
+                if(times<1){
+                    // 设置正则规则
+                     reg = "\\[(\\d{2}:\\d{2}:\\d{2})\\]";
+                    // 编译
+                     pattern = Pattern.compile(reg);
+                     matcher = pattern.matcher(str);
+                    // 如果存在匹配项，则执行以下操作
+                    while (matcher.find()&&times<1) {
+                        // 得到匹配的所有内容
+                        String msg = matcher.group();
+                        // 得到这个匹配项开始的索引
+                        int start = matcher.start();
+                        // 得到这个匹配项结束的索引
+                        int end = matcher.end();
+
+                        // 得到这个匹配项中的组数
+                        int groupCount = matcher.groupCount();
+                        // 得到每个组中内容
+                        for (int i = 0; i <= groupCount; i++) {
+                            String timeStr = matcher.group(i);
+                            if (i == 1) {
+                                // 将第二组中的内容设置为当前的一个时间点
+                                currentTime = strToLong(timeStr,false);
+                                currentTime_int=strToInt(timeStr,false);
+                            }
+                        }
+
+                        // 得到时间点后的内容
+                        String[] content = pattern.split(str);
+                        // 输出数组内容
+                        for (int i = 0; i < content.length; i++) {
+                            if (i == content.length - 1) {
+                                // 将内容设置为当前内容
+                                currentContent = content[i];
+                            }
+                        }
+                        if(content.length==0){
+                            currentContent="";
+                        }
+                        // 设置时间点和内容的映射
+                        if(lastLineTime!=-1){
+                            maps.get(lastLineTime).setLength(currentTime-lastLineTime);
+                        }
+                        if(lastLineTime_int!=-1){
+                            maps_int.get(lastLineTime_int).setLength(currentTime-lastLineTime);
+                        }
+                        maps.put(currentTime, new LrcContent(currentContent,999999999));
+                        maps_int.put(currentTime_int, new LrcContent(currentContent,999999999));
+                        System.out.println("put---currentTime--->" + currentTime
+                                + "----currentContent---->" + currentContent
+                                +"-----lastLength-----"+(currentTime-lastLineTime));
+                        lastLineTime=currentTime;
+                        lastLineTime_int=currentTime_int;
+
+                        times++;
+                    }
+                }
             }
         }
 
@@ -175,23 +233,40 @@ public class LrcUtil {
          *            字符形式的时间点
          * @return Long形式的时间
          */
-        private long strToLong(String timeStr) {
+        private long strToLong(String timeStr,boolean standard) {
             // 因为给如的字符串的时间格式为XX:XX.XX,返回的long要求是以毫秒为单位
             // 1:使用：分割 2：使用.分割
-            String[] s = timeStr.split(":");
-            int min = Integer.parseInt(s[0]);
-            String[] ss = s[1].split("\\.");
-            int sec = Integer.parseInt(ss[0]);
-            int mill = Integer.parseInt(ss[1]);
-            return min * 60 * 1000 + sec * 1000 + mill;
+            if(standard){
+                String[] s = timeStr.split(":");
+                int min = Integer.parseInt(s[0]);
+                String[] ss = s[1].split("\\.");
+                int sec = Integer.parseInt(ss[0]);
+                int mill = Integer.parseInt(ss[1]);
+                return min * 60 * 1000 + sec * 1000 + mill;
+            }else {
+                String[] s = timeStr.split(":");
+                int min = Integer.parseInt(s[0]);
+                int sec = Integer.parseInt(s[1]);
+                int mill = Integer.parseInt(s[2]);
+                return min * 60 * 1000 + sec * 1000 + mill;
+            }
+
         }
-        private int strToInt(String timeStr){
-            String[] s = timeStr.split(":");
-            int min = Integer.parseInt(s[0]);
-            String[] ss = s[1].split("\\.");
-            int sec = Integer.parseInt(ss[0]);
-            int mill = Integer.parseInt(ss[1]);
-            return min * 60 + sec ;
+        private int strToInt(String timeStr,boolean standard) {
+            if (standard) {
+                String[] s = timeStr.split(":");
+                int min = Integer.parseInt(s[0]);
+                String[] ss = s[1].split("\\.");
+                int sec = Integer.parseInt(ss[0]);
+                int mill = Integer.parseInt(ss[1]);
+                return min * 60 + sec;
+            } else {
+                String[] s = timeStr.split(":");
+                int min = Integer.parseInt(s[0]);
+                int sec = Integer.parseInt(s[1]);
+                int mill = Integer.parseInt(s[2]);
+                return min * 60 + sec;
+            }
         }
 
 
