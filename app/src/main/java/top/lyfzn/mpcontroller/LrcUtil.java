@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class LrcUtil {
     /**
-     * 此类用来解析LRC文件 将解析完整的LRC文件放入一个LrcInfo对象中 并且返回这个LrcInfo对象s author:java_mzd
+     * 此类用来解析LRC文件 将解析完整的LRC文件放入一个LrcInfo对象中 并且返回这个LrcInfo对象s author:java_mzd Edited By Fzn
      */
     public static class LrcParser {
         private LrcInfo lrcinfo = new LrcInfo();
@@ -49,6 +49,9 @@ public class LrcUtil {
             return lrcinfo;
 
         }
+        /*
+        *以字符串形式读入歌词
+        */
         public LrcInfo parserLrc(String lrc){
             String[] lines=lrc.split("\n");
             for(String line:lines){
