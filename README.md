@@ -4,6 +4,7 @@ MedoaPlayerController,基于MediaPlayer
 ![image](./images/demo.png)
 ![image](./images/demo2.png)
 # 使用  
+[![](https://jitpack.io/v/zbfzn/MPController.svg)](https://jitpack.io/#zbfzn/MPController)
 gradle配置:  
 ````gradle
 allprojects {
@@ -111,4 +112,3 @@ MediaInfo
 ````xml
 <uses-permission android:name="android.permission.INTERNET"/><!--联网权限-->
 ````
-[![](https://jitpack.io/v/zbfzn/MPController.svg)](https://jitpack.io/#zbfzn/MPController)
