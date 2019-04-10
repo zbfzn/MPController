@@ -37,7 +37,8 @@ import me.shaohui.bottomdialog.BottomDialog;
 import static android.content.ContentValues.TAG;
 
 public class MediaPlayerControllerView extends RelativeLayout{
-public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
+    public static final int SHUNXU=0,LIEBIAO=1,DANQU=2,RANDOM=3;
+    private  int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
     private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv,lrc_tv;
@@ -178,6 +179,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
     public void setIsShowLrc(boolean isshow){
         isShowLrc=isshow;
     }
+    public void setChildOnBindViewListener(OnBindPlayerViewListener onBindViewListener){
+        onBindViewListener.OnBindView(getChildAt(1));
+    }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
         if(resourceId>=0&&hasInit&&count<2){
@@ -217,7 +221,24 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             onBindViewListener.OnBindView(view1);
         }
     }
+    public void setPlayModel(int playModel){
+        this.playModel=playModel%4;
+        switch (this.playModel){
+            case 0:
+                playModel_tv.setBackgroundResource(R.drawable.shunxubofang);
+                break;
+            case 1:
+                playModel_tv.setBackgroundResource(R.drawable.xunhuan);
+                break;
+            case 2:
+                playModel_tv.setBackgroundResource(R.drawable.danquxunhuan);
+                break;
+            case 3:
+                playModel_tv.setBackgroundResource(R.drawable.suijibofang);
+                break;
+        }
 
+    }
     public void setIsShowPlayStatusChangeToast(boolean isShow){
         isShowToast=isShow;
     }
