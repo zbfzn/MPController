@@ -2,6 +2,7 @@
 MedoaPlayerController,基于MediaPlayer  
 # Demo  
 ![image](./images/demo.png)
+![image](./images/demo2.png)
 # 使用  
 gradle配置:  
 ````gradle
@@ -53,7 +54,7 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
 
 # 提供的方法  
 ````java
-       MediaPlayerControllerView mediaPlayerControllerView=new MediaPlayerControllerView(this);
+    
         mediaPlayerControllerView.initPlayer(this,true);//初始化
         mediaPlayerControllerView.Play(new MediaInfo("url","tag"));//播放资源，url：地址（String），tag：标识（String）
         mediaPlayerControllerView.setIsShowLrc(true);//是否显示歌词
@@ -105,5 +106,9 @@ MediaInfo
 //属性url,Tag,lrc
     MediaInfo mediaInfo=new MediaInfo("url","tag");//url、tag不能为空
         mediaInfo=new MediaInfo("url","tag","lrc");//lrc为字符串，可解析[00:00.00]和[00:00:00]两种格式歌词
+````
+# Manifest.xml  
+````xml
+<uses-permission android:name="android.permission.INTERNET"/><!--联网权限-->
 ````
 [![](https://jitpack.io/v/zbfzn/MPController.svg)](https://jitpack.io/#zbfzn/MPController)
