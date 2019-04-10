@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -301,13 +302,17 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             playNext(playPosition,playQueue.size()-1);
         }
     }
-    public boolean Destory(){
+    public boolean Destory(){//在OnDestory()中调用
         if(hasInit){
             playPosition=-1;
             playQueue.clear();
             mediaPlayer.stop();
             mediaPlayer=null;
             hasInit=false;
+            nextPlay=true;
+            progress_position=0;
+            total_length=0;
+            progress_seekbar.setProgress(0);
             volume.removeCallbacks(volume_r);
             progress.removeCallbacks(progress_r);
             resouce_ready.removeCallbacks(resouce_ready_r);
@@ -317,15 +322,16 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             if(textColor_r!=null){
                 textColor_h.removeCallbacks(textColor_r);
             }
+            lrc_tv.setText("");
+            media_tag_tv.setText("");
             return true;
         }
         return false;
     }
-    public void ClearQueue(){
+    public void ReplaceQueue(List<MediaInfo> newQueue){
         if(hasInit){
-            mediaPlayer.stop();
-            playQueue.clear();
-            playPosition=-1;
+            playQueue=newQueue;
+            Play(playQueue.get(0));
         }
     }
 
@@ -496,6 +502,8 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                     toastS("缓冲中...");
                 }catch (IOException e){
                     return false;
+                }catch (NullPointerException e){
+                    return false;
                 }
                 return true;
             }
@@ -635,6 +643,7 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                             final ListView listView=v.findViewById(R.id.list_view);
                             TextView toPlayposition=v.findViewById(R.id.to_playposition);
                             Button bt=v.findViewById(R.id.dialog_cancel);
+                            final SearchView searchView=v.findViewById(R.id.search_v);
                             List<String> tags=new ArrayList<>();
                             for(int i=0;i<playQueue.size();i++){
                                 if(playPosition==i){
@@ -664,8 +673,32 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
                                 @Override
                                 public void onClick(View v) {
                                     if(playPosition>=0) {
-                                        listView.smoothScrollToPosition(playPosition);
+                                        listView.setSelection(playPosition);
                                     }
+                                }
+                            });
+                            searchView.clearFocus();
+                            listView.requestFocus();
+                            searchView.setSubmitButtonEnabled(true);
+                            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                                @Override
+                                public boolean onQueryTextSubmit(String query) {
+                                    searchView.clearFocus();
+                                    listView.requestFocus();
+                                    for(int i=0;i<playQueue.size();i++){
+                                        MediaInfo tmp=playQueue.get(i);
+                                        if(tmp.getTag().contains(query)){
+                                            listView.setSelection(tmp.getPosition());
+                                            return true;
+                                        }
+                                    }
+                                    toastS("没有相匹配Tag的资源");
+                                    return true;
+                                }
+
+                                @Override
+                                public boolean onQueryTextChange(String newText) {
+                                    return false;
                                 }
                             });
                         }
@@ -781,6 +814,9 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
             mediaPlayer.stop();
         }
     }
+    private void whenQueueEmpity(){
+        Destory();
+    }
     private void setListenerChangePlayModel(){
         playModel_tv.setOnClickListener(new OnClickListener() {
             @Override
@@ -804,6 +840,10 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         });
     }
     private void playCompleted(){
+        if(playQueue.size()<=0){
+            whenQueueEmpity();
+            return;
+        }
         switch (playModel){
             case 0:
                 int position=playPosition+1;
@@ -830,6 +870,10 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         }
     }
     private void playNext(int start,int end){
+        if(playQueue.size()<=0){
+            whenQueueEmpity();
+            return;
+        }
         switch (playModel){
             case 0:
                 int position=playPosition+1;
@@ -856,6 +900,10 @@ public static int playModel;//0顺序播放,1列表循环,2单曲循环,3随机�
         }
     }
     private void playLast(int start,int end){
+        if(playQueue.size()<=0){
+            whenQueueEmpity();
+            return;
+        }
         switch (playModel){
             case 0:
                 int position=playPosition-1;
