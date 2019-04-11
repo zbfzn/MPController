@@ -28,7 +28,8 @@ xml文件中使用：
  <top.lyfzn.mpcontroller.MediaPlayerControllerView
        android:id="@+id/music_player"
        android:layout_width="match_parent"
-       android:layout_height="300dp">
+       android:layout_height="300dp"
+       app:controllerBackground="@drawable/ic_launcher_background" ><!--设置背景-->
       <!--<Button-->
           <!--android:layout_width="match_parent"-->
           <!--android:layout_height="50dp"-->
