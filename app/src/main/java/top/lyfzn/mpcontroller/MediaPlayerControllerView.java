@@ -6,6 +6,9 @@ package top.lyfzn.mpcontroller;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
@@ -56,6 +59,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private AudioManager audioManager;
     private Spanned spanned_lrc=Html.fromHtml("");
     private Map<Long, LrcUtil.LrcContent> lrcinfo=new HashMap<>();
+    private AttributeSet attrs;
 
     public MediaPlayerControllerView(Context context) {
         super(context);
@@ -65,17 +69,18 @@ public class MediaPlayerControllerView extends RelativeLayout{
     public MediaPlayerControllerView(Context context, AttributeSet attrs) {
         super(context, attrs);
         inflate(context, R.layout.media_player_controller_layout,this);
+        initView();
         mcontext=context;
         hasInit=true;
+        this.attrs=attrs;
+        setAttrs(mcontext,attrs);
     }
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-        initView();
         initAction();
         setChild();
     }
-
 
     private void initView(){
         progress_seekbar=findViewById(R.id.progress_seekbar);
@@ -96,6 +101,31 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
         control=findViewById(R.id.control_layout);
     }
+    private void setAttrs(Context context,AttributeSet attrs){
+        TypedArray arr=context.obtainStyledAttributes(attrs, R.styleable.MediaPlayerControllerView);
+
+        try{
+            int color=arr.getColor(R.styleable.MediaPlayerControllerView_controllerBackground,Color.parseColor("#aaaaaa"));
+            if(color>=0){
+                setControlBackground(color);
+            }else{
+                setControlBackground(Color.parseColor("#aaaaaa"));
+            }
+        }catch (Exception e){
+            setControlBackground(Color.parseColor("#aaaaaa"));
+        }
+          try{
+              Drawable drawable=arr.getDrawable(R.styleable.MediaPlayerControllerView_controllerBackground);
+              if(drawable!=null){
+                  setControlBackground(drawable);
+              }else {
+                  setControlBackground(Color.parseColor("#aaaaaa"));
+              }
+          }catch (Exception e){
+              setControlBackground(Color.parseColor("#aaaaaa"));
+          }
+        arr.recycle();
+    }
     private void setChild(){
         if(getChildCount()==2){
             marginChildView(getChildAt(1));
@@ -111,7 +141,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         LayoutParams layoutParamV=(LayoutParams)view.getLayoutParams();
         width_child=layoutParamV.width;
         height_child=layoutParamV.height;
-        margin_bottom=dp2px(70)+dp2px(15);
+        margin_bottom=dp2px(65)+dp2px(15)+dp2px(25);
         LayoutParams layoutParamRV=new LayoutParams(width_child,height_child);
         layoutParamRV.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM,RelativeLayout.TRUE);
         layoutParamRV.bottomMargin=margin_bottom;
@@ -181,6 +211,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
     }
     public void setChildOnBindViewListener(OnBindPlayerViewListener onBindViewListener){
         onBindViewListener.OnBindView(getChildAt(1));
+    }
+    public void setControlBackground(int color){
+        control.setBackgroundColor(color);
+    }
+    public void setControlBackground(Drawable background){
+        control.setBackground(background);
     }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
@@ -929,7 +965,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
             case 0:
                 int position=playPosition-1;
                 if(position<0){
-                    Stop();
+                    position=playQueue.size()-1;
                 }else {
                     playPosition=position;
                     playerControl.play(playQueue.get(playPosition));
@@ -937,6 +973,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 break;
             case 1:
                 int position1=(playPosition-1)%playQueue.size();
+                if(position1<0){
+                    position1=playQueue.size()-1;
+                }
                 playPosition=position1;
                 playerControl.play(playQueue.get(playPosition));
                 break;
@@ -945,6 +984,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 break;
             case 3:
                 int position3=(int)(Math.random()*(end+1))-start;
+                if(position3<0){
+                    position3=playQueue.size()-1;
+                }
                 playPosition=position3;
                 playerControl.play(playQueue.get(playPosition));
                 break;
@@ -974,11 +1016,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         if(isShowToast)Toast.makeText(mcontext, mesg, Toast.LENGTH_LONG).show();
     }
 
+
 }
 
-
 interface PlayerControl{
-   boolean play();
+    boolean play();
     boolean play(MediaInfo mediaInfo);
     void pause();
     void startApause();
@@ -987,4 +1029,5 @@ interface PlayerControl{
     void volumeControl();
     void progressControl();
 }
+
 
