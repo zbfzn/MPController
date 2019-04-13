@@ -28,7 +28,8 @@ xml文件中使用：
  <top.lyfzn.mpcontroller.MediaPlayerControllerView
        android:id="@+id/music_player"
        android:layout_width="match_parent"
-       android:layout_height="300dp">
+       android:layout_height="300dp"
+       app:controllerBackground="@drawable/ic_launcher_background" ><!--设置背景-->
       <!--<Button-->
           <!--android:layout_width="match_parent"-->
           <!--android:layout_height="50dp"-->
@@ -57,6 +58,9 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
 ````java
     
         mediaPlayerControllerView.initPlayer(this,true);//初始化
+	mediaPlayerControllerView.setControlBackground(Color.parseColor("#aaaaaa"));//设置面板背景色，也支持Drawable资源
+        mediaPlayerControllerView.isPlaying();//是否正在播放
+        mediaPlayerControllerView.setOnErrorAutoNext(true);//设置播放错误时自动播放下一曲，默认false
         mediaPlayerControllerView.Play(new MediaInfo("url","tag"));//播放资源，url：地址（String），tag：标识（String）
         mediaPlayerControllerView.setIsShowLrc(true);//是否显示歌词
         mediaPlayerControllerView.setIsShowPlayStatusChangeToast(true);//是否显示内置toast提示
