@@ -49,8 +49,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
     private PlayListener listner;
-    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false,isShowLrc=true,nextPlay=false;
-    private int playPosition=-1;
+    private boolean hasListener=false,hasInit=false,isShowToast=false,onErrorAutoNext=false,onPrepared=false,isShowLrc=true,nextPlay=false,isErrorPlay=false;
+    private int playPosition=-1,error_playPosition=-1;
     private Context mcontext;
     private AppCompatActivity appCompatActivity;
     private Handler progress,volume,resouce_ready,lrc_h,textColor_h;
@@ -456,6 +456,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     onPrepared=false;
                     spanned_lrc=Html.fromHtml("");
                     nextPlay=true;
+                    isErrorPlay=false;
+                    error_playPosition=-1;
                     isLoadingNotice.setText("资源加载中...");
                     isLoadingNotice.setVisibility(VISIBLE);
                     media_tag_tv.setVisibility(GONE);
@@ -497,6 +499,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     mediaPlayer.setOnErrorListener(new MediaPlayer.OnErrorListener() {
                         @Override
                         public boolean onError(MediaPlayer mp, int what, int extra) {
+                            isErrorPlay=true;
+                            error_playPosition=playPosition;
                             String str=(playPosition>=0)?playQueue.get(playPosition).getTag():"";
                             toastS("播放‘"+str+"’错误,error_mesg:"+"("+what+","+extra+")");
                             startApause.setBackgroundResource(R.drawable.bofang);
@@ -584,13 +588,17 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 startApause.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if(playPosition>=0){
+                        if(playPosition>=0&&!isErrorPlay){
                             if(mediaPlayer.isPlaying()){
                                 Pause();
                             }else{
                                 Start();
                             }
-                        }else {
+                        } else if(isErrorPlay){
+                            startApause.setBackgroundResource(R.drawable.zanting);
+                            playerControl.play(playQueue.get(error_playPosition));
+                        }
+                        else {
                             Play();
                         }
 
@@ -869,6 +877,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private void Stop(){
         if(hasInit){
             mediaPlayer.stop();
+            startApause.setBackgroundResource(R.drawable.bofang);
         }
     }
     private void whenQueueEmpity(){
@@ -906,6 +915,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 int position=playPosition+1;
                 if(position>playQueue.size()-1){
                     Stop();
+                    playPosition=-1;
+                    System.out.println("没有下一曲");
                 }else {
                     playPosition=position;
                     playerControl.play(playQueue.get(playPosition));
@@ -934,11 +945,17 @@ public class MediaPlayerControllerView extends RelativeLayout{
         switch (playModel){
             case 0:
                 int position=playPosition+1;
-                if(position>playQueue.size()-1){
-                    Stop();
-                }else {
+                if(!(position>playQueue.size()-1)){
                     playPosition=position;
                     playerControl.play(playQueue.get(playPosition));
+                }else {
+                    if(playQueue.size()>0){
+                        playPosition=0;
+                        playerControl.play(playQueue.get(playPosition));
+                    }else {
+                        playPosition=-1;
+                        System.out.println("没有下一曲");
+                    }
                 }
                 break;
             case 1:
@@ -950,7 +967,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 playerControl.play(playQueue.get(playPosition));
                 break;
             case 3:
-                int position3=(int)(Math.random()*(end+1))-start;
+                int position3=(int)(Math.random()*playQueue.size());
                 playPosition=position3;
                 playerControl.play(playQueue.get(playPosition));
                 break;
@@ -966,6 +983,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 int position=playPosition-1;
                 if(position<0){
                     position=playQueue.size()-1;
+                    playPosition=position;
+                    playerControl.play(playQueue.get(playPosition));
                 }else {
                     playPosition=position;
                     playerControl.play(playQueue.get(playPosition));
@@ -983,10 +1002,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 playerControl.play(playQueue.get(playPosition));
                 break;
             case 3:
-                int position3=(int)(Math.random()*(end+1))-start;
-                if(position3<0){
-                    position3=playQueue.size()-1;
-                }
+                int position3=(int)(Math.random()*playQueue.size());
                 playPosition=position3;
                 playerControl.play(playQueue.get(playPosition));
                 break;
