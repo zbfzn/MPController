@@ -102,6 +102,7 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
         mediaPlayerControllerView.Last();//播放上一个资源（上一个资源位置取决于播放模式）
         mediaPlayerControllerView.Next();//播放下一个资源（同上）
         mediaPlayerControllerView.setPlayModel(MediaPlayerControllerView.SHUNXU);//设置播放模式  SHUNXU=0,LIEBIAO=1,DANQU=2,RANDOM=3     0顺序播放,1列表循环,2单曲循环,3随机播放
+	mediaPlayerControllerView.SeekTo(120);//单位：秒
         mediaPlayerControllerView.Destory();//此方法只在OnDestory中调用,用于销毁播放器
 ````
 
