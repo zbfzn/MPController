@@ -219,6 +219,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
     public void setControlBackground(Drawable background){
         control.setBackground(background);
     }
+    public void setIsLoadingNoticeTextColor(int color){
+        isLoadingNotice.setTextColor(color);
+    }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
         if(resourceId>=0&&hasInit&&count<2){
