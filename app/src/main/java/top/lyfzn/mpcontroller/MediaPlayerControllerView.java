@@ -44,7 +44,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private  int playModel;//0顺序播放,1列表循环,2单曲循环,3随机播放
     private RelativeLayout control;
     private SeekBar progress_seekbar,volume_seekbar;
-    private TextView currentPosition,totalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv,lrc_tv;
+    private TextView currentPosition,totoalLength,volume_percent,volume_img,startApause,last,next,isLoadingNotice,playModel_tv,play_list_tv,media_tag_tv,lrc_tv;
     private MediaPlayer mediaPlayer;
     private PlayerControl playerControl;
     private List<MediaInfo> playQueue=new ArrayList<>();
@@ -55,7 +55,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private AppCompatActivity appCompatActivity;
     private Handler progress,volume,resouce_ready,lrc_h,textColor_h;
     private Runnable progress_r,volume_r,resouce_ready_r,lrc_r,textColor_r;
-    private int progress_position=0,volume_position=0,total_length=0,max_volume=0,history_volume_percent=50;
+    private int progress_position=0,volume_position=0,totoal_length=0,max_volume=0,history_volume_percent=50;
     private AudioManager audioManager;
     private Spanned spanned_lrc=Html.fromHtml("");
     private Map<Long, LrcUtil.LrcContent> lrcinfo=new HashMap<>();
@@ -88,7 +88,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         volume_seekbar=findViewById(R.id.seekbar_volume_progress);
 
         currentPosition=findViewById(R.id.current_position);
-        totalLength=findViewById(R.id.total_length);
+        totoalLength=findViewById(R.id.total_length);
         last=findViewById(R.id.last);
         startApause=findViewById(R.id.start_pause);
         next=findViewById(R.id.next);
@@ -167,10 +167,10 @@ public class MediaPlayerControllerView extends RelativeLayout{
                         progress_position=mediaPlayer.getCurrentPosition();
                     }
                     currentPosition.setText(timeFormat(progress_position));
-                    if(total_length==0){
+                    if(totoal_length==0){
                         progress_seekbar.setProgress(0);
                     }else {
-                        progress_seekbar.setProgress((int)(progress_position*1.0/total_length*100));
+                        progress_seekbar.setProgress((int)(progress_position*1.0/totoal_length*100));
                     }
 
                 }
@@ -360,6 +360,13 @@ public class MediaPlayerControllerView extends RelativeLayout{
             playNext(playPosition,playQueue.size()-1);
         }
     }
+    public void SeekTo(int toSeconds){
+        if(hasInit&playPosition>=0&totoal_length>0){
+            int mill=toSeconds*1000;
+            int pro=(int)(mill%totoal_length)*100;
+            mediaPlayer.seekTo(mill);
+        }
+    }
     public boolean Destory(){//在OnDestory()中调用
         if(hasInit){
             playPosition=-1;
@@ -369,7 +376,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
             hasInit=false;
             nextPlay=true;
             progress_position=0;
-            total_length=0;
+            totoal_length=0;
             progress_seekbar.setProgress(0);
             volume.removeCallbacks(volume_r);
             progress.removeCallbacks(progress_r);
@@ -461,7 +468,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 try {
                     startApause.setBackgroundResource(R.drawable.bofang);
                     progress_position=0;
-                    total_length=0;
+                    totoal_length=0;
                     onPrepared=false;
                     spanned_lrc=Html.fromHtml("");
                     nextPlay=true;
@@ -485,8 +492,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                             isLoadingNotice.setText("等待资源加载");
                             media_tag_tv.setVisibility(VISIBLE);
                             media_tag_tv.setText(mediaInfo.getTag());
-                            total_length=mediaPlayer.getDuration();
-                            totalLength.setText(timeFormat(total_length));
+                            totoal_length=mediaPlayer.getDuration();
+                            totoalLength.setText(timeFormat(totoal_length));
                             showLrc(mediaInfo.getLrc());
                             nextPlay=false;
                             startApause.setBackgroundResource(R.drawable.zanting);
@@ -668,7 +675,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                 progress_seekbar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        int toPosition=(int)(progress*1.0/100*total_length);
+                        int toPosition=(int)(progress*1.0/100*totoal_length);
                         currentPosition.setText(timeFormat(toPosition));
                     }
 
@@ -680,7 +687,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
                         int progress=seekBar.getProgress();
-                        int toPosition=(int)(progress*1.0/100*total_length);
+                        int toPosition=(int)(progress*1.0/100*totoal_length);
                         if(playPosition>=0){
                             mediaPlayer.seekTo(toPosition);
                         }
