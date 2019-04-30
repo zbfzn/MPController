@@ -80,6 +80,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         super.onFinishInflate();
         initAction();
         setChild();
+        setControllerVisiblity(false);//控制面板默认不可见
     }
 
     private void initView(){
@@ -149,7 +150,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
     }
 
-    public void initPlayer(AppCompatActivity appCompatActivity,boolean controllerVisible){
+    public void initPlayer(AppCompatActivity appCompatActivity, boolean controllerVisible){
         mediaPlayer=new MediaPlayer();
         audioManager=(AudioManager) mcontext.getSystemService(Context.AUDIO_SERVICE);
         this.appCompatActivity=appCompatActivity;
@@ -417,8 +418,16 @@ public class MediaPlayerControllerView extends RelativeLayout{
             playerControl.volumeControl();
             playerControl.progressControl();
             playerControl.startApause();
+            if(getChildCount()>=2){
+                View child=getChildAt(1);
+                child.setVisibility(VISIBLE);
+            }
         }else{
             control.setVisibility(GONE);
+            if(getChildCount()>=2){
+                View child=getChildAt(1);
+                child.setVisibility(GONE);
+            }
         }
 
     }
@@ -698,7 +707,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
             @Override
             public void onClick(View v) {
                 if(isSupportAppcompatActivity()&&playQueue.size()>0){
-                    final BottomDialog bottomDialog=BottomDialog.create(appCompatActivity.getSupportFragmentManager())
+                    final BottomDialog bottomDialog= BottomDialog.create(appCompatActivity.getSupportFragmentManager())
                             .setLayoutRes(R.layout.dialog_layout)
                             .setDimAmount(0.1f)// Dialog window 背景色深度 范围：0 到 1，默认是0.2f
                             .setCancelOutside(true);     // 点击外部区域是否关闭，默认true
