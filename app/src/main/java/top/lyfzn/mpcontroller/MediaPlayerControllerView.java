@@ -60,6 +60,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private Spanned spanned_lrc=Html.fromHtml("");
     private Map<Long, LrcUtil.LrcContent> lrcinfo=new HashMap<>();
     private AttributeSet attrs;
+    private String lrcCrossColor="#eeee00";
 
     public MediaPlayerControllerView(Context context) {
         super(context);
@@ -221,6 +222,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
     }
     public void setIsLoadingNoticeTextColor(int color){
         isLoadingNotice.setTextColor(color);
+    }
+    public void setLrcCrossColor(String color){
+        lrcCrossColor=color;
     }
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
@@ -888,7 +892,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         try {
             String str1 = str.substring(0, position);
             String str2 = str.substring(position, str.length());
-            return Html.fromHtml("<font color='#eeee00'>" + str1 + "</font>" + str2);
+            return Html.fromHtml("<font color='"+lrcCrossColor+"'>" + str1 + "</font>" + str2);
         }catch (Exception e){
             return Html.fromHtml(str);
         }
@@ -1043,6 +1047,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
         String s=minute+":"+second;
         return s;
     }
+
     private String volumeProgressFormat(int progress){
         return progress+"%";
     }
