@@ -516,9 +516,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                         @Override
                         public void onCompletion(MediaPlayer mp) {
+                            boolean isBreak=false;
                             if(hasListener){
-                                listner.complete(playPosition);
+                                isBreak=listner.complete(playPosition);
                             }
+                            if(!isBreak)
                             playCompleted();
                         }
                     });
