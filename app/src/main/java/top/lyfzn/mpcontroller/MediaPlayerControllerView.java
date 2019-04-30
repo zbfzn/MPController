@@ -471,6 +471,9 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     totoal_length=0;
                     onPrepared=false;
                     spanned_lrc=Html.fromHtml("");
+                    if(lrc_r!=null) {
+                        lrc_h.removeCallbacks(lrc_r);
+                    }
                     nextPlay=true;
                     isErrorPlay=false;
                     error_playPosition=-1;
