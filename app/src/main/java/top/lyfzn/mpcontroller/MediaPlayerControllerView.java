@@ -220,8 +220,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
     public void setControlBackground(Drawable background){
         control.setBackground(background);
     }
-    public void setIsLoadingNoticeTextColor(int color){
-        isLoadingNotice.setTextColor(color);
+    public void setMediaTagTextColor(int color){
+        media_tag_tv.setTextColor(color);
     }
     public void setLrcCrossColor(String color){
         lrcCrossColor=color;
