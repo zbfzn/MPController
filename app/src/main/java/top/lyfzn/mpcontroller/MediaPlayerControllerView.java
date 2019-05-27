@@ -651,7 +651,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                         mediaPlayer.start();
                         startApause.setBackgroundResource(R.drawable.zanting);
                         if(hasListener){
-                            listner.beginPlay(playPosition);
+                            listner.beginPlay(playQueue.get(playPosition),playPosition);
                         }
                     }
                     return true;
@@ -706,7 +706,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                             startApause.setBackgroundResource(R.drawable.zanting);
                             toastS("缓冲完成，即将播放");
                             if(hasListener){
-                                listner.beginPlay(playPosition);
+                                listner.beginPlay(playQueue.get(playPosition),playPosition);
                             }
                         }
                     });
@@ -715,7 +715,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                         public void onCompletion(MediaPlayer mp) {
                             boolean isBreak=false;
                             if(hasListener){
-                                isBreak=listner.complete(playPosition);
+                                isBreak=listner.complete(playQueue.get(playPosition),playPosition);
                             }
                             if(!isBreak)
                             playCompleted();
@@ -801,7 +801,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
                         mediaPlayer.pause();
                         startApause.setBackgroundResource(R.drawable.bofang);
                         if(hasListener){
-                            listner.paused(playPosition);
+                            listner.paused(playQueue.get(playPosition),playPosition);
                         }
                     }
                 }
