@@ -16,7 +16,7 @@ allprojects {
 ````
 ````gradle
 dependencies {
-	        implementation 'com.github.zbfzn:MPController:#version'
+	        implementation 'com.github.zbfzn:MPController:1.0.19'
 	}
 
 ````
