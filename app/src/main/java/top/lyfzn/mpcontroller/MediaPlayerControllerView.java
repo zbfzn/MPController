@@ -61,6 +61,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     private Map<Long, LrcUtil.LrcContent> lrcinfo=new HashMap<>();
     private AttributeSet attrs;
     private String lrcCrossColor="#eeee00";
+    private String lrcColor="#ffffff";
 
     public MediaPlayerControllerView(Context context) {
         super(context);
@@ -103,6 +104,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
         control=findViewById(R.id.control_layout);
     }
+
+    /**
+     * 设置自定义属性
+     * @param context 上下文
+     * @param attrs 属性集合
+     */
     private void setAttrs(Context context,AttributeSet attrs){
         TypedArray arr=context.obtainStyledAttributes(attrs, R.styleable.MediaPlayerControllerView);
 
@@ -128,16 +135,31 @@ public class MediaPlayerControllerView extends RelativeLayout{
           }
         arr.recycle();
     }
+
+    /**
+     * 设置子View或Layout
+     */
     private void setChild(){
         if(getChildCount()==2){
             marginChildView(getChildAt(1));
         }
     }
+
+    /**
+     * dpi转pixel，dp值转像素值
+     * @param dp
+     * @return 返回像素值
+     */
     private int dp2px(int dp){
         DisplayMetrics displayMetrics=new DisplayMetrics();
         ((Activity) mcontext).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         return (dp*displayMetrics.densityDpi)/displayMetrics.DENSITY_DEFAULT;
     }
+
+    /**
+     * 对子View定位，划分空间
+     * @param view
+     */
     private void marginChildView(View view){
         int width_child,height_child,control_layout_w,control_layout_h,control_main_w,control_main_h,margin_bottom,width,hight;
         LayoutParams layoutParamV=(LayoutParams)view.getLayoutParams();
@@ -151,6 +173,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
     }
 
+    /**
+     * 初始化
+     * @param appCompatActivity 传入CompatActivity
+     * @param controllerVisible 是否可见
+     */
     public void initPlayer(AppCompatActivity appCompatActivity, boolean controllerVisible){
         mediaPlayer=new MediaPlayer();
         audioManager=(AudioManager) mcontext.getSystemService(Context.AUDIO_SERVICE);
@@ -208,24 +235,68 @@ public class MediaPlayerControllerView extends RelativeLayout{
        volume.postDelayed(volume_r,0);
        resouce_ready.postDelayed(resouce_ready_r,0);
     }
+
+    /**
+     * 是否展示歌词，默认true
+     * @param isshow
+     */
     public void setIsShowLrc(boolean isshow){
         isShowLrc=isshow;
     }
+
+    /**
+     * 对子控件进行绑定，可以设置其点击等操作
+     * @param onBindViewListener 传入一个listener
+     */
     public void setChildOnBindViewListener(OnBindPlayerViewListener onBindViewListener){
         onBindViewListener.OnBindView(getChildAt(1));
     }
+
+    /**
+     * 设置控制面板背景颜色
+     * @param color 可以Color.praseColor()获取int值
+     */
     public void setControlBackground(int color){
         control.setBackgroundColor(color);
     }
+
+    /**
+     * 设置控制面板背景资源文件，以上两个方法只能选择其一，否则后者会覆盖前者
+     * @param background
+     */
     public void setControlBackground(Drawable background){
         control.setBackground(background);
     }
+
+    /**
+     * 设置Tag的颜色
+     * @param color
+     */
     public void setMediaTagTextColor(int color){
         media_tag_tv.setTextColor(color);
     }
+
+    /**
+     * 设置为经过的歌词颜色，默认白色
+     * @param lrcColor
+     */
+    public void setLrcColor(String lrcColor) {
+        this.lrcColor = lrcColor;
+        lrc_tv.setTextColor(Color.parseColor(this.lrcColor));
+    }
+
+    /**
+     * 设置经过的歌词颜色，默认微黄色
+     * @param color
+     */
     public void setLrcCrossColor(String color){
         lrcCrossColor=color;
     }
+
+    /**
+     * 代码内添加子控件，前提xml文件没有声明子控件
+     * @param resourceId
+     */
     public void addViewToAboveController(int resourceId){
         int count=getChildCount();
         if(resourceId>=0&&hasInit&&count<2){
@@ -234,6 +305,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
             marginChildView(view1);
         }
     }
+
+    /**
+     * 代码内添加子控件，前提xml文件没有声明子控件,同时绑定View
+     * @param resourceId
+     * @param onBindViewListener
+     */
     public void addViewToAboveController(int resourceId, OnBindPlayerViewListener onBindViewListener){
         int count=getChildCount();
         if(resourceId>=0&&onBindViewListener!=null&&hasInit&&count<2){
@@ -244,6 +321,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
     }
 
+    /**
+     * 代码内添加子控件，前提xml文件没有声明子控件,指定控件大小（单位pixel）
+     * @param resourceId
+     * @param widthPx
+     * @param heightPx
+     */
     public void addViewToAboveController(int resourceId,int widthPx,int heightPx){
         int count=getChildCount();
         if(resourceId>=0&&hasInit&&count<2){
@@ -254,6 +337,14 @@ public class MediaPlayerControllerView extends RelativeLayout{
             marginChildView(view1);
         }
     }
+
+    /**
+     * 代码内添加子控件，前提xml文件没有声明子控件,同时绑定子View，指定大小
+     * @param resourceId
+     * @param widthPx
+     * @param heightPx
+     * @param onBindViewListener
+     */
     public void addViewToAboveController(int resourceId, int widthPx, int heightPx, OnBindPlayerViewListener onBindViewListener){
         int count=getChildCount();
         if(resourceId>=0&&onBindViewListener!=null&&hasInit&&count<2){
@@ -265,6 +356,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
             onBindViewListener.OnBindView(view1);
         }
     }
+
+    /**
+     * 设置列表的播放模式（顺序，列表循环，单曲循环，随机播放）
+     * @param playModel
+     */
     public void setPlayModel(int playModel){
         this.playModel=playModel%4;
         switch (this.playModel){
@@ -283,12 +379,29 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
 
     }
+
+
+    /**
+     * 设置是否展示控制面板的自带Toast提示
+     * @param isShow
+     */
     public void setIsShowPlayStatusChangeToast(boolean isShow){
         isShowToast=isShow;
     }
+
+    /**
+     * 设置遇到错误时自动下一曲（防止播放模式为列表循环、单曲循环、随机播放时所有资源失效，停不下来的情况），默认false
+     * @param autoNext
+     */
     public void setOnErrorAutoNext(boolean autoNext){
         onErrorAutoNext=autoNext;
     }
+
+    /**
+     * 添加资源到播放队列
+     * @param mediaInfo
+     * @return 添加成功返回position，失败返回-1
+     */
     public int addToPlayQueue(MediaInfo mediaInfo){
         if(mediaInfo.notNull()){
             mediaInfo.setPosition(playQueue.size());
@@ -297,6 +410,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
         return -1;
     }
+
+    /**
+     * 批量添加资源到播放队列
+     * @param mediaInfos
+     */
     public void addListToPlayQueue(List<MediaInfo> mediaInfos){
         int count=playQueue.size();
         for(MediaInfo mediaInfo:mediaInfos){
@@ -306,12 +424,23 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
 
     }
+
+    /**
+     * 返回当前是否正在播放
+     * @return
+     */
     public boolean isPlaying(){
         if(hasInit&&playPosition>=0&&onPrepared){
             return mediaPlayer.isPlaying();
         }
         return false;
     }
+
+    /**
+     * 初始化后播放指定资源
+     * @param mediaInfo
+     * @return 返回是否播放成功
+     */
     public boolean Play(MediaInfo mediaInfo){
         if(hasInit){
             if(mediaInfo.notNull()){
@@ -326,11 +455,24 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
         return false;
     }
-    public void Play(int position){
+
+    /**
+     * 初始化后播放指定位置资源
+     * @param position
+     * @return
+     */
+    public boolean Play(int position){
         if(position>=0&&position<playQueue.size()){
-            Play(playQueue.get(position));
+            return Play(playQueue.get(position));
         }
+
+        return false;
     }
+
+    /**
+     * 初始化后播放0位置资源
+     * @return
+     */
     public boolean Play(){
         if(hasInit){
             playPosition=-1;
@@ -338,6 +480,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
         return false;
     }
+
+    /**
+     * 继续播放，Play后调用方有效
+     * @return
+     */
     public boolean Start(){
         if(hasInit){
             if(playPosition>=0){
@@ -352,21 +499,39 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
         return false;
     }
+
+    /**
+     * 暂停播放
+     */
     public void Pause(){
         if(hasInit){
             playerControl.pause();
         }
     }
+
+
+    /**
+     * 播放上一首，取决播放模式（PlayMode）
+     */
     public void Last(){
         if(playPosition>=0){
            playLast(0,playPosition);
         }
     }
+
+    /**
+     * 播放下一首，取决播放模式（PlayMode）
+     */
     public void Next(){
         if(playPosition>=0){
             playNext(playPosition,playQueue.size()-1);
         }
     }
+
+    /**
+     * 定位到指定位置
+     * @param toSeconds
+     */
     public void SeekTo(int toSeconds){
         if(hasInit&playPosition>=0&totoal_length>0){
             int mill=toSeconds*1000;
@@ -374,7 +539,12 @@ public class MediaPlayerControllerView extends RelativeLayout{
             mediaPlayer.seekTo(mill);
         }
     }
-    public boolean Destory(){//在OnDestory()中调用
+
+    /**
+     * 销毁，只能在OnDestory()中调用
+     * @return
+     */
+    public boolean Destory(){
         if(hasInit){
             playPosition=-1;
             playQueue.clear();
@@ -400,6 +570,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
         return false;
     }
+
+    /**
+     * 替换当前播放队列，并且从0播放
+     * @param newQueue
+     */
     public void ReplaceQueue(List<MediaInfo> newQueue){
         if(hasInit){
             playQueue=newQueue;
@@ -408,21 +583,39 @@ public class MediaPlayerControllerView extends RelativeLayout{
     }
 
 
+    /**
+     * 设置播放状态改变监听器
+     * @param listener
+     */
     public void setPlayChangeListenser(PlayListener listener){
         if(listener!=null){
             this.listner=listener;
             hasListener=true;
         }
     }
+
+    /**
+     * 获取当前播放位置
+     * @return
+     */
     public int getNowPlayPosition(){
         return playPosition;
     }
+
+    /**
+     * 获取播放队列
+     * @return
+     */
     public List<MediaInfo> getPlayQueue(){
         List<MediaInfo> queue = new ArrayList<>(playQueue);
         return queue;
     }
 
 
+    /**
+     * 设置控制面板是否可见
+     * @param visiblity
+     */
     private void setControllerVisiblity(boolean visiblity){
         if(visiblity){
             control.setVisibility(VISIBLE);
@@ -445,7 +638,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         }
 
     }
-   private void initAction() {
+
+    /**
+     * 初始化播放Action,控制操作大部分在此处实现
+     */
+    private void initAction() {
         playerControl=new PlayerControl() {
             @Override
             public boolean play() {
@@ -807,6 +1004,11 @@ public class MediaPlayerControllerView extends RelativeLayout{
         });
 
     }
+
+    /**
+     * 歌词滚动实现
+     * @param lrc
+     */
     private void showLrc(String lrc){
         if(lrc.equals("")){
             spanned_lrc=Html.fromHtml("暂无歌词");
@@ -1064,6 +1266,10 @@ public class MediaPlayerControllerView extends RelativeLayout{
 
 }
 
+
+/**
+ * 播放控制接口类
+ */
 interface PlayerControl{
     boolean play();
     boolean play(MediaInfo mediaInfo);
