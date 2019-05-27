@@ -277,7 +277,7 @@ public class MediaPlayerControllerView extends RelativeLayout{
     }
 
     /**
-     * 设置为经过的歌词颜色，默认白色
+     * 设置未经过的歌词颜色，默认白色
      * @param lrcColor
      */
     public void setLrcColor(String lrcColor) {
