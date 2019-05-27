@@ -1,7 +1,7 @@
 package top.lyfzn.mpcontroller;
 /**
  * Create By zbfzn 2019/4/6
- * Play()、Start()不能同时使用
+ * Play()、Start()不能同时立即调用
  */
 
 import android.app.Activity;
