@@ -63,8 +63,8 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
         mediaPlayerControllerView.setOnErrorAutoNext(true);//设置播放错误时自动播放下一曲，默认false
         mediaPlayerControllerView.Play(new MediaInfo("url","tag"));//播放资源，url：地址（String），tag：标识（String）
         mediaPlayerControllerView.setIsShowLrc(true);//是否显示歌词
-	mediaPlayerControllerView.setLrcColor(Color.parseColor("#aaaaaa"));//设置未经过的歌词颜色，默认白色
-	mediaPlayerControllerView.setLrcCrossColor(Color.parseColor("#aaaaaa"));//设置经过的歌词颜色，默认微黄色
+	mediaPlayerControllerView.setLrcColor("#aaaaaa");//设置未经过的歌词颜色，默认白色
+	mediaPlayerControllerView.setLrcCrossColor("#aaaaaa");//设置经过的歌词颜色，默认微黄色
         mediaPlayerControllerView.setIsShowPlayStatusChangeToast(true);//是否显示内置toast提示
         mediaPlayerControllerView.setPlayChangeListenser(new PlayListener() {
             @Override
