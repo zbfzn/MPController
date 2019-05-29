@@ -63,6 +63,8 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
         mediaPlayerControllerView.setOnErrorAutoNext(true);//设置播放错误时自动播放下一曲，默认false
         mediaPlayerControllerView.Play(new MediaInfo("url","tag"));//播放资源，url：地址（String），tag：标识（String）
         mediaPlayerControllerView.setIsShowLrc(true);//是否显示歌词
+	mediaPlayerControllerView.setLrcColor(Color.parseColor("#aaaaaa"));//设置未经过的歌词颜色，默认白色
+	mediaPlayerControllerView.setLrcCrossColor(Color.parseColor("#aaaaaa"));//设置经过的歌词颜色，默认微黄色
         mediaPlayerControllerView.setIsShowPlayStatusChangeToast(true);//是否显示内置toast提示
         mediaPlayerControllerView.setPlayChangeListenser(new PlayListener() {
             @Override
@@ -89,6 +91,7 @@ MediaPlayerControllerView mediaPlayerControllerView=findViewById(R.id.music_play
         mediaPlayerControllerView.Play();//从第一个资源开始播放
         mediaPlayerControllerView.Play(0);//播放指定位置的，三个Play方法必须调用一个，或者直接调用ReplaceQueue
         mediaPlayerControllerView.addViewToAboveController(R.layout.dialog_layout);//添加子view
+	mediaPlayerControllerView.getChildView();//获取子view，如果没有返回空值,必须在addView方法后执行
         mediaPlayerControllerView.addListToPlayQueue(list);//批量添加资源到队列，不播放
         mediaPlayerControllerView.ReplaceQueue(list);//替换当前queue，并且从0位置播放
         mediaPlayerControllerView.setChildOnBindViewListener(new OnBindPlayerViewListener() {
