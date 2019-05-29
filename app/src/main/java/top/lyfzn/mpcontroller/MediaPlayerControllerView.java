@@ -190,19 +190,19 @@ public class MediaPlayerControllerView extends RelativeLayout{
         progress_r=new Runnable() {
             @Override
             public void run() {
-                if(hasInit&&playPosition>=0){
-                    if(onPrepared){
-                        progress_position=mediaPlayer.getCurrentPosition();
+                if(hasInit&&playPosition>=0){//是否初始化
+                    if(onPrepared){//MediaPlayer是否准备好
+                        progress_position=mediaPlayer.getCurrentPosition();//获取当前播放位置
                     }
-                    currentPosition.setText(timeFormat(progress_position));
+                    currentPosition.setText(timeFormat(progress_position));//更新界面
                     if(totoal_length==0){
-                        progress_seekbar.setProgress(0);
+                        progress_seekbar.setProgress(0);//更新进度条
                     }else {
                         progress_seekbar.setProgress((int)(progress_position*1.0/totoal_length*100));
                     }
 
                 }
-                lrc_tv.setVisibility(isShowLrc?VISIBLE:GONE);
+                lrc_tv.setVisibility(isShowLrc?VISIBLE:GONE);//设置歌词的显示与否
                 progress.postDelayed(this,0);
             }
         };
@@ -355,6 +355,17 @@ public class MediaPlayerControllerView extends RelativeLayout{
             marginChildView(view1);
             onBindViewListener.OnBindView(view1);
         }
+    }
+
+    /**
+     * 获取子view，如果没有返回空值
+     * @return
+     */
+    public View getChildView(){
+        if(getChildCount()>=2){
+            return getChildAt(1);
+        }
+        return null;
     }
 
     /**
@@ -692,8 +703,8 @@ public class MediaPlayerControllerView extends RelativeLayout{
                     mediaPlayer.prepareAsync();
                     mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                         @Override
-                        public void onPrepared(MediaPlayer mp) {
-                            mediaPlayer.start();
+                        public void onPrepared(MediaPlayer mp) {//资源准备完毕
+                            mediaPlayer.start();//开始播放
                             onPrepared=true;
                             isLoadingNotice.setVisibility(GONE);
                             isLoadingNotice.setText("等待资源加载");
@@ -1270,15 +1281,15 @@ public class MediaPlayerControllerView extends RelativeLayout{
 /**
  * 播放控制接口类
  */
-interface PlayerControl{
-    boolean play();
-    boolean play(MediaInfo mediaInfo);
-    void pause();
-    void startApause();
-    void last();
-    void next();
-    void volumeControl();
-    void progressControl();
+interface PlayerControl{//播放控制接口类
+    boolean play();//播放0位置
+    boolean play(MediaInfo mediaInfo);//播放指定资源
+    void pause();//暂停播放
+    void startApause();//播放/暂停控制键执行方法
+    void last();//上一资源
+    void next();//下一资源
+    void volumeControl();//音量控制
+    void progressControl();//进度条控制
 }
 
 
